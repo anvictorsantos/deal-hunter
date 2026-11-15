@@ -23,5 +23,8 @@
     "postcss": "^8.5.33",
     "prisma": "^7.10.1",
     "tailwindcss": "^3.4.10"
+  },
+  "overrides": {
+    "readdir-glob": "4.0.0"
   }
 }
