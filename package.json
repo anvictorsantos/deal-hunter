@@ -1,0 +1,27 @@
+{
+  "name": "deal-hunter",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "nuxt dev",
+    "build": "nuxt build",
+    "preview": "nuxt preview",
+    "generate": "nuxt generate",
+    "db:generate": "prisma generate",
+    "db:push": "prisma db push",
+    "db:migrate": "prisma migrate dev"
+  },
+  "dependencies": {
+    "nuxt": "^3.13.0",
+    "@nuxtjs/supabase": "^1.4.5",
+    "@prisma/client": "^5.18.0",
+    "playwright": "^1.48.0"
+  },
+  "devDependencies": {
+    "@nuxtjs/tailwindcss": "^6.12.0",
+    "prisma": "^5.18.0",
+    "tailwindcss": "^3.4.10",
+    "postcss": "^8.4.40",
+    "autoprefixer": "^10.4.20"
+  }
+}

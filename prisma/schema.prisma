@@ -1,0 +1,84 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Supabase auth.users is external; we mirror its id
+model Brand {
+  id        String     @id @default(cuid())
+  name      String     @unique // Sony, Nintendo, Microsoft
+  platforms Platform[]
+}
+
+model Platform {
+  id           Int    @id // RAWG platform id (e.g. 18 = PS4)
+  name         String // PlayStation 4
+  slug         String @unique // ps4
+  gamesCount   Int    @default(0)
+  brandId      String?
+  brand        Brand? @relation(fields: [brandId], references: [id])
+  games        Game[]
+}
+
+model Game {
+  id             String   @id @default(cuid())
+  rawgId         Int      @unique // RAWG game id
+  rawgSlug       String   @unique
+  name           String
+  coverImage     String?
+  platformId     Int
+  platform       Platform @relation(fields: [platformId], references: [id])
+  listings       Listing[]
+  wishlistEntries WishlistEntry[]
+
+  @@index([platformId])
+  @@index([name])
+}
+
+model Listing {
+  id            String   @id @default(cuid())
+  externalId    String   // OLX ad id
+  marketplace   String   @default("olx_pt") // olx_pt, ebay (v2)
+  title         String
+  price         Float
+  currency      String   @default("EUR")
+  condition     String?  // new, used, null
+  url           String
+  imageUrl      String?
+  location      String?
+  gameId        String?
+  game          Game?    @relation(fields: [gameId], references: [id])
+  snapshots     PriceSnapshot[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([marketplace, externalId])
+  @@index([gameId])
+  @@index([price])
+}
+
+model PriceSnapshot {
+  id        String   @id @default(cuid())
+  listingId String
+  listing   Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  price     Float
+  createdAt DateTime @default(now())
+
+  @@index([listingId, createdAt])
+}
+
+model WishlistEntry {
+  id        String   @id @default(cuid())
+  userId    String   // Supabase auth.users.id
+  gameId    String
+  game      Game     @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, gameId])
+  @@index([userId])
+  @@index([gameId])
+}
