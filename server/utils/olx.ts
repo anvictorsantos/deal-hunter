@@ -1,23 +1,5 @@
 import { chromium } from 'playwright'
-
-function normalize(s: string) { return s.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim() }
-
-export function matchesGame(text: string, gameName: string) {
-  if (!text) return false
-  return normalize(text).includes(normalize(gameName))
-}
-
-export type ScrapedListing = {
-  externalId: string
-  title: string
-  price: number
-  currency: string
-  condition: string | null
-  url: string
-  imageUrl: string | null
-  location: string | null
-  description?: string | null // bundle description for matcher
-}
+import type { MarketplaceListing, MarketplaceSource } from './marketplace'
 
 async function fetchDescription(url: string): Promise<string | null> {
   try {
@@ -37,11 +19,12 @@ async function fetchDescription(url: string): Promise<string | null> {
 }
 
 // ponytail: single browser for search, fetch() for detail pages (no extra browsers) — add pool/parallel limit if >20 details
-export async function scrapeOlxListings(query: string, maxItems = 20): Promise<ScrapedListing[]> {
+async function searchOlx(query: string, maxItems = 20, regionId?: number): Promise<MarketplaceListing[]> {
   const browser = await chromium.launch({ headless: true })
   try {
     const page = await browser.newPage({ userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36' })
-    await page.goto(`https://www.olx.pt/d/q-${encodeURIComponent(query)}/`, { waitUntil: 'domcontentloaded', timeout: 20000 })
+    const url = `https://www.olx.pt/d/q-${encodeURIComponent(query)}/${regionId ? `?search%5Bregion_id%5D=${regionId}` : ''}`
+    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 20000 })
     await page.waitForTimeout(1800)
     try { await page.locator('[data-testid="cookie-policy"] button').click({ timeout: 1500 }) } catch {}
     await page.waitForSelector('[data-testid="l-card"], [data-testid="listing-grid"]', { timeout: 8000 }).catch(() => {})
@@ -77,7 +60,7 @@ export async function scrapeOlxListings(query: string, maxItems = 20): Promise<S
         imageUrl: c.img && !c.img.startsWith('data:') ? c.img : null,
         location: c.loc,
         description: null as string | null,
-      } as ScrapedListing
+      } as MarketplaceListing
     })
 
     // fetch descriptions for bundle-aware matching — only if title doesn't already hint, but cheap to fetch all 20 via fetch()
@@ -90,4 +73,9 @@ export async function scrapeOlxListings(query: string, maxItems = 20): Promise<S
   } finally {
     await browser.close()
   }
+}
+
+export const olxPt: MarketplaceSource = {
+  id: 'olx_pt',
+  search: (query, opts) => searchOlx(query, opts?.limit ?? 20, opts?.regionId),
 }
