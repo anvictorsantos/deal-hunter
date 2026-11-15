@@ -1,12 +1,12 @@
 import type { Game } from '@prisma/client'
-import { prisma } from './prisma'
-import { matchesGame } from './matching'
-import { olxPt } from './olx'
+import { prisma } from './prisma.ts'
+import { matchesGame } from './matching.ts'
+import { olxPt } from './olx.ts'
 
-export async function refreshListingsForGame(game: Game): Promise<number> {
+export async function refreshListingsForGame(game: Game, opts: { regionId?: number } = {}): Promise<number> {
   const query = game.name.replace(/[:/]/g, ' ').trim()
-  console.log(`[live scrape] query="${query}" for game="${game.name}"`)
-  const scraped = await olxPt.search(query, { limit: 20 })
+  console.log(`[live scrape] query="${query}" for game="${game.name}"${opts.regionId ? ` region=${opts.regionId}` : ''}`)
+  const scraped = await olxPt.search(query, { limit: 20, regionId: opts.regionId })
   console.log(`[live scrape] scraped=${scraped.length} titles=${scraped.slice(0, 3).map(s => s.title).join(' | ')}`)
   let matched = 0
   for (const s of scraped) {
