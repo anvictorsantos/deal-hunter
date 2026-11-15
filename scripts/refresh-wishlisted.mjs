@@ -1,9 +1,9 @@
 // hourly cron: refresh listings only for games in at least one wishlist (S4 hybrid)
 // Q2:A Playwright, Q3:C hybrid (cron + live), Q4:A single-IP, Q5:B full fields
 // ponytail: sequential per game — parallelize with pLimit if wishlist >100
-import { PrismaClient } from '@prisma/client'
+import 'dotenv/config'
+import { prisma } from '../server/utils/prisma.ts'
 import { scrapeOlxListings, matchesGame } from '../server/utils/olx.ts'
-const prisma = new PrismaClient()
 const games = await prisma.game.findMany({ where: { wishlistEntries: { some: {} } }, include: { platform: true } })
 for (const g of games) {
   const q = g.name.replace(/[:/]/g, ' ').trim()
