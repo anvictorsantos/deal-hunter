@@ -1,4 +1,13 @@
-# Deal Hunter
+<p align="center">
+  <img src="assets/image/logo.png" width="360" alt="Deal Hunter logo" />
+</p>
+
+<h1 align="center">Deal Hunter</h1>
+
+<p align="center">
+  <strong>Physical game deals across Portugal, tracked hourly.</strong><br />
+  Search the RAWG catalog, watch the games you care about, compare the cheapest OLX.pt listings first.
+</p>
 
 Nuxt 3 + Tailwind + Supabase (Postgres + Auth) + Prisma + REST. RAWG catalog + OLX.pt scraping via Playwright (Portugal). eBay deferred, alerts deferred. See ADR 0004 (scraping supersedes API).
 
