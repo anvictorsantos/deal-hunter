@@ -27,3 +27,22 @@ export function useWishlist() {
   onMounted(load)
   return { ids, isWishlisted, add, remove, toggle, load }
 }
+
+// shared by the watchlist page and the landing watchlist section
+export function useWishlistGames() {
+  const { ids, remove } = useWishlist()
+  const games = ref<any[]>([])
+  const pending = ref(true)
+
+  async function load() {
+    pending.value = true
+    if (!ids.value.length) { games.value = []; pending.value = false; return }
+    // fetch each game in parallel — ponytail: N+1 but N = wishlist size (small)
+    const res = await Promise.all(ids.value.map(id => $fetch(`/api/games/${id}`).catch(() => null)))
+    games.value = res.filter(Boolean)
+    pending.value = false
+  }
+  watch(ids, load, { deep: true })
+  onMounted(load)
+  return { ids, games, pending, remove }
+}
