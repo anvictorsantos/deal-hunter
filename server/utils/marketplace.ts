@@ -10,7 +10,7 @@ export type MarketplaceListing = {
   description?: string | null
 }
 
-export type SearchOptions = { limit?: number }
+export type SearchOptions = { limit?: number; regionId?: number }
 
 export interface MarketplaceSource {
   readonly id: string

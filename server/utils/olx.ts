@@ -19,11 +19,12 @@ async function fetchDescription(url: string): Promise<string | null> {
 }
 
 // ponytail: single browser for search, fetch() for detail pages (no extra browsers) — add pool/parallel limit if >20 details
-async function searchOlx(query: string, maxItems = 20): Promise<MarketplaceListing[]> {
+async function searchOlx(query: string, maxItems = 20, regionId?: number): Promise<MarketplaceListing[]> {
   const browser = await chromium.launch({ headless: true })
   try {
     const page = await browser.newPage({ userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36' })
-    await page.goto(`https://www.olx.pt/d/q-${encodeURIComponent(query)}/`, { waitUntil: 'domcontentloaded', timeout: 20000 })
+    const url = `https://www.olx.pt/d/q-${encodeURIComponent(query)}/${regionId ? `?search%5Bregion_id%5D=${regionId}` : ''}`
+    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 20000 })
     await page.waitForTimeout(1800)
     try { await page.locator('[data-testid="cookie-policy"] button').click({ timeout: 1500 }) } catch {}
     await page.waitForSelector('[data-testid="l-card"], [data-testid="listing-grid"]', { timeout: 8000 }).catch(() => {})
@@ -76,5 +77,5 @@ async function searchOlx(query: string, maxItems = 20): Promise<MarketplaceListi
 
 export const olxPt: MarketplaceSource = {
   id: 'olx_pt',
-  search: (query, opts) => searchOlx(query, opts?.limit ?? 20),
+  search: (query, opts) => searchOlx(query, opts?.limit ?? 20, opts?.regionId),
 }

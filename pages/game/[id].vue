@@ -20,12 +20,26 @@
     </section>
 
     <section class="pb-16 sm:pb-24">
-      <div class="mb-2 flex items-baseline justify-between">
+      <div class="mb-2 flex items-baseline justify-between gap-4">
         <h2 class="font-display text-3xl font-light">Listings — cheapest first</h2>
-        <span class="text-sm text-mute">OLX.pt</span>
+        <div class="flex items-center gap-3">
+          <span class="text-sm text-mute">OLX.pt</span>
+          <button
+            @click="toggleNearby"
+            :disabled="nearPending"
+            :aria-pressed="nearActive"
+            class="h-8 rounded-full border border-hairline px-4 text-sm transition-colors disabled:opacity-50"
+            :class="nearActive ? 'bg-primary text-white' : 'text-body hover:text-primary'"
+          >
+            {{ nearPending ? 'Locating…' : 'Near me' }}
+          </button>
+        </div>
       </div>
+      <p v-if="nearError" class="mb-2 text-sm text-mute">{{ nearError }}</p>
       <div v-if="listingsPending" class="py-5 text-sm text-mute">Loading listings</div>
-      <div v-else-if="!listings?.length" class="py-5 text-sm text-mute">No listings matched for this Game yet. Try after cron or check the OLX link.</div>
+      <div v-else-if="!listings?.length" class="py-5 text-sm text-mute">
+        {{ nearActive ? 'No listings near you yet. Try without Near me.' : 'No listings matched for this Game yet. Try after cron or check the OLX link.' }}
+      </div>
       <div v-else class="divide-y divide-hairline">
         <div v-for="(l, i) in listings" :key="l.id" class="flex items-center gap-4 py-5">
           <div class="w-10 shrink-0 font-display text-3xl font-light" :class="i === 0 ? 'text-primary' : 'text-ash'">{{ i + 1 }}</div>
@@ -55,7 +69,43 @@ const hideBrokenImage = useImgFallback()
 const route = useRoute()
 const id = route.params.id as string
 const { data: game } = await useFetch(`/api/games/${id}`)
-const { data: listings, pending: listingsPending } = await useFetch(`/api/games/${id}/listings`)
+
+const coords = ref<{ lat: number; lon: number } | null>(null)
+const nearPending = ref(false)
+const nearError = ref<string | null>(null)
+const nearActive = computed(() => coords.value !== null)
+
+const { data: listings, pending: listingsPending } = await useAsyncData(
+  `listings-${id}`,
+  () => $fetch<any[]>(`/api/games/${id}/listings${coords.value ? `?lat=${coords.value.lat}&lon=${coords.value.lon}` : ''}`),
+  { watch: [coords] }
+)
+
+function toggleNearby() {
+  if (coords.value) {
+    coords.value = null
+    nearError.value = null
+    return
+  }
+  if (!import.meta.client || !navigator.geolocation) {
+    nearError.value = 'Location is not available in this browser'
+    return
+  }
+  nearPending.value = true
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      nearPending.value = false
+      nearError.value = null
+      coords.value = { lat: pos.coords.latitude, lon: pos.coords.longitude }
+    },
+    err => {
+      nearPending.value = false
+      nearError.value = err.code === err.PERMISSION_DENIED ? 'Location permission denied' : 'Could not get your location'
+    },
+    { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 }
+  )
+}
+
 const { isWishlisted, toggle: toggleStore } = useWishlist()
 const inWishlist = computed(() => isWishlisted(id))
 function toggle() { toggleStore(id) }
