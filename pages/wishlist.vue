@@ -34,17 +34,5 @@
 
 <script setup lang="ts">
 const hideBrokenImage = useImgFallback()
-const { ids, remove } = useWishlist()
-const games = ref<any[]>([])
-const pending = ref(true)
-
-async function load() {
-  pending.value = true
-  if (!ids.value.length) { games.value = []; pending.value = false; return }
-  const res = await Promise.all(ids.value.map(id => $fetch(`/api/games/${id}`).catch(() => null)))
-  games.value = res.filter(Boolean)
-  pending.value = false
-}
-watch(ids, load, { deep: true })
-onMounted(load)
+const { games, pending, remove } = useWishlistGames()
 </script>
