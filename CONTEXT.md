@@ -17,8 +17,11 @@ _Avoid_: Manufacturer, publisher
 
 ### Marketplace
 
-**Marketplace**: An external site where listings are published (e.g. OLX.pt). The source of truth for price; Deal Hunter never sets a price. For MVP, listings are obtained by scraping the marketplace's HTML with Playwright (single-IP, no proxy).
+**Marketplace**: An external site where listings are published (e.g. OLX.pt). The source of truth for price; Deal Hunter never sets a price. For MVP, listings are discovered by scraping the marketplace's HTML with Playwright (single-IP, no proxy).
 _Avoid_: Platform (when you mean OLX/eBay), provider
+
+**Partner API**: OLX's OAuth2 partner interface (scope `read write v2`). Covers the authenticated partner's own adverts, orders, threads, and reference data (categories, attributes, cities, currencies). It cannot search other sellers' adverts, so it is not a source of Listings.
+_Avoid_: OLX API (when you mean search), marketplace API
 
 **Listing**: A single offer on a marketplace — title, price, currency, condition, URL, image, location, and the marketplace that published it. Always linked to a Game when matched; unmatched listings are not comparable.
 _Avoid_: Ad, post, offer, product
