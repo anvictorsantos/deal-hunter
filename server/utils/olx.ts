@@ -74,7 +74,7 @@ export async function scrapeOlxListings(query: string, maxItems = 20): Promise<S
         currency: 'EUR',
         condition,
         url,
-        imageUrl: c.img,
+        imageUrl: c.img && !c.img.startsWith('data:') ? c.img : null,
         location: c.loc,
         description: null as string | null,
       } as ScrapedListing
