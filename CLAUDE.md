@@ -14,7 +14,7 @@ npm run build          # production build
 npx playwright install chromium   # once, required for OLX scraping
 
 npm run db:generate    # prisma generate
-npm run db:push        # push schema (local SQLite dev DB at prisma/dev.db)
+npm run db:push        # push schema to Neon (uses DATABASE_URL_UNPOOLED)
 npm run db:migrate     # migrate dev
 
 RAWG_API_KEY=xxx node scripts/sync-catalog.mjs   # seed platforms + games from RAWG
@@ -32,7 +32,7 @@ Nuxt full-stack (Nuxt 4, SSR off by default settings, Tailwind). No separate bac
 
 - **Pages** (`pages/`): `index.vue` (hero + catalog search + inline watchlist), `game/[id].vue` (cover, watchlist toggle, listings sorted cheapest-first, optional "Near me"), `wishlist.vue`, `login.vue` (redirects; auth was removed).
 - **API** (`server/api/`): `GET /api/platforms` (brand-grouped), `GET /api/games?q=&platform=` (every search refreshes that title from RAWG into the DB, then reads locally), `GET /api/games/:id` (repairs a missing cover from RAWG), `GET /api/games/:id/listings?lat=&lon=`.
-- **Data layer** (`server/utils/`): `prisma.ts` exports the singleton client; all routes import it. The schema is **SQLite** via `@prisma/adapter-better-sqlite3`, while `DATABASE_URL` and `.env.example` still mention Postgres — the actual adapter decides.
+- **Data layer** (`server/utils/`): `prisma.ts` exports the singleton client; all routes import it. The schema is **Postgres on Neon**, reached through `@prisma/adapter-pg` (`PrismaPg`). `DATABASE_URL` is the pooled connection for the app; `DATABASE_URL_UNPOOLED` is the direct connection used by Prisma CLI commands (`db:push`, migrations) — `prisma.config.ts` picks it. Neon project/branch ids live in `.neon` (gitignored).
 - **Scraping** (`server/utils/olx.ts`, `marketplace.ts`, `listings.ts`): `MarketplaceSource` is the abstraction; `olxPt` is the only implementation. Search uses the video-games category path (ADR 0007). `refreshListingsForGame` scrapes OLX search, parses bundle descriptions, matches titles/descriptions via `matchesGame`, upserts `Listing`, appends a `PriceSnapshot`, and resolves seller trust.
 - **Platforms/brands** (`server/utils/brands.ts`): maps RAWG platform slugs to Sony/Microsoft/Nintendo/Sega/Atari/PC & Mobile; the sync persists `Brand` rows and `Platform.brandId`.
 - **Matching & bundles** (`server/utils/matching.ts`, `bundle.ts`): normalized substring match, ignoring RAWG `(2008)` years. Lot adverts with 3+ priced lines become one `Listing` per line (`externalId = adId#lineIndex`) at the line price, not the lot price.

@@ -13,7 +13,9 @@
     "test": "node --test tests/"
   },
   "dependencies": {
-    "@prisma/adapter-better-sqlite3": "^7.10.1",
+    "@neon/config": "^1.14.6",
+    "@neon/env": "^2.1.9",
+    "@prisma/adapter-pg": "^7.10.1",
     "@prisma/client": "^7.10.1",
     "nuxt": "^4.6.4",
     "playwright": "^1.65.1"

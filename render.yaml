@@ -1,7 +1,7 @@
-# Render blueprint — one Node web service with a persistent disk for SQLite.
+# Render blueprint — one Node web service, database lives on Neon Postgres.
 #
-# SQLite lives on the disk, so this needs a paid instance (Starter or above);
-# Render disks are not available on the free plan. The disk survives deploys.
+# Set DATABASE_URL (pooled) and DATABASE_URL_UNPOOLED (direct) from the Neon
+# project in the Render dashboard. No disk is needed.
 # Deploy: Render → New → Blueprint → this repo. Spec: render.com/docs/blueprint-spec
 services:
   - type: web
@@ -18,22 +18,20 @@ services:
       npm run db:generate &&
       npx playwright install --with-deps chromium &&
       npm run build
-    # db:push keeps a fresh disk in sync; it refuses destructive changes
-    # instead of silently dropping data.
+    # db:push applies schema changes; it refuses destructive changes instead of
+    # silently dropping data. It uses DATABASE_URL_UNPOOLED via prisma.config.ts.
     startCommand: >-
       npx prisma db push --skip-generate &&
       node .output/server/index.mjs
     healthCheckPath: /api/platforms
-    disk:
-      name: deal-hunter-data
-      mountPath: /var/data
-      sizeGB: 1
     envVars:
       - key: NODE_VERSION
         value: 22.18.0
-      # Absolute path so it resolves past the prisma/ dir logic in prisma.config.ts.
+      # Pooled connection for the app, direct connection for Prisma CLI.
       - key: DATABASE_URL
-        value: file:/var/data/deal-hunter.db
+        sync: false
+      - key: DATABASE_URL_UNPOOLED
+        sync: false
       - key: RAWG_API_KEY
         sync: false
       # Also set this value as the GitHub repo secret CRON_SECRET.
