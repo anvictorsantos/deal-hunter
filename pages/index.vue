@@ -20,7 +20,9 @@
       <input v-model="q" @keyup.enter="search" placeholder="Search games" class="h-12 w-full max-w-[560px] rounded border border-ash px-4 text-base focus:border-2 focus:border-primary focus:outline-none" />
       <select v-model="platformSlug" class="h-12 rounded border border-ash px-3 text-base">
         <option value="">All platforms</option>
-        <option v-for="p in platforms" :key="p.slug" :value="p.slug">{{ p.name }}</option>
+        <optgroup v-for="group in platformGroups" :key="group.name" :label="group.name">
+          <option v-for="p in group.platforms" :key="p.slug" :value="p.slug">{{ p.name }}</option>
+        </optgroup>
       </select>
       <button @click="search" class="h-12 rounded-full bg-primary px-7 text-lg font-semibold tracking-wide text-white transition-colors hover:bg-primary-pressed">Search</button>
     </section>
@@ -82,6 +84,15 @@ const { games: wishlistGames, remove: removeWishlistGame } = useWishlistGames()
 const platformName = computed(() =>
   platforms.value?.find(p => p.slug === platformSlug.value)?.name ?? ''
 )
+
+const platformGroups = computed(() => {
+  const groups = new Map<string, any[]>()
+  for (const p of platforms.value ?? []) {
+    if (!groups.has(p.brandName)) groups.set(p.brandName, [])
+    groups.get(p.brandName)!.push(p)
+  }
+  return [...groups].map(([name, list]) => ({ name, platforms: list }))
+})
 
 async function search() {
   searched.value = true

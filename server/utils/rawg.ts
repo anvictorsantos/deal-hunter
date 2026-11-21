@@ -1,4 +1,6 @@
 // ponytail: naive RAWG sync — full platform pages but only 20 games per top platform. Upgrade to incremental sync when catalog grows.
+import { brandForSlug } from './brands.ts'
+
 export async function syncPlatformsAndGames(rawgKey: string, prisma: any) {
   const platforms: any[] = []
   for (let page = 1; ; page++) {
@@ -9,10 +11,12 @@ export async function syncPlatformsAndGames(rawgKey: string, prisma: any) {
   }
   const filtered = platforms.filter((p: any) => p.games_count > 0)
   for (const p of filtered) {
+    const brandName = brandForSlug(p.slug)
+    const brand = await prisma.brand.upsert({ where: { name: brandName }, create: { name: brandName }, update: {} })
     await prisma.platform.upsert({
       where: { id: p.id },
-      create: { id: p.id, name: p.name, slug: p.slug, gamesCount: p.games_count },
-      update: { name: p.name, gamesCount: p.games_count }
+      create: { id: p.id, name: p.name, slug: p.slug, gamesCount: p.games_count, brandId: brand.id },
+      update: { name: p.name, gamesCount: p.games_count, brandId: brand.id }
     })
   }
   // seed a few games per platform — wire full pagination later
