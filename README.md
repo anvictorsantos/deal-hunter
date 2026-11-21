@@ -35,22 +35,23 @@ RAWG_API_KEY=xxx node scripts/sync-catalog.mjs
 
 | Setting | Value |
 |---|---|
-| Language / Runtime | Node |
+| Language / Runtime | **Docker** |
+| Dockerfile Path | `./Dockerfile` |
 | Region | Frankfurt |
 | Branch | `main` |
 | Root Directory | *(blank)* |
-| Build Command | `npm ci && npm run db:generate && npx playwright install --with-deps chromium && npm run build` |
 | Start Command | `npx prisma db push --skip-generate && node .output/server/index.mjs` |
-| Instance Type | Free or higher |
+| Instance Type | Starter or higher |
 | Health Check Path | `/api/platforms` |
 | Auto-Deploy | Yes |
 
 No disk — the database is Neon Postgres.
 
+Docker is required: Render's native Node runtime is non-root, so Playwright's `--with-deps` cannot install Chromium's system libraries. `mcr.microsoft.com/playwright:v1.65.1-jammy` already has them, and Chromium stays sandboxed because the image runs as `pwuser`.
+
 **Environment variables**:
 | Key | Value |
 |---|---|
-| `NODE_VERSION` | `22.18.0` |
 | `DATABASE_URL` | Neon **pooled** connection string |
 | `DATABASE_URL_UNPOOLED` | Neon **direct** connection string (Prisma CLI) |
 | `RAWG_API_KEY` | your key |

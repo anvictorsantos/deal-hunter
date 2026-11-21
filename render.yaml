@@ -1,32 +1,25 @@
-# Render blueprint — one Node web service, database lives on Neon Postgres.
+# Render blueprint — one Docker web service, database lives on Neon Postgres.
 #
+# Docker because Render's native Node runtime runs as non-root, so Playwright's
+# `--with-deps` cannot apt-install Chromium's system libraries. The Playwright
+# base image ships them. No disk is needed.
 # Set DATABASE_URL (pooled) and DATABASE_URL_UNPOOLED (direct) from the Neon
-# project in the Render dashboard. No disk is needed.
+# project in the Render dashboard.
 # Deploy: Render → New → Blueprint → this repo. Spec: render.com/docs/blueprint-spec
 services:
   - type: web
     name: deal-hunter
-    runtime: node
+    runtime: docker
     plan: starter
     region: frankfurt
     branch: main
     autoDeployTrigger: commit
-    # --with-deps installs Chromium's OS libraries for the OLX scraper.
-    # db:generate must run before the Nuxt build: server code imports @prisma/client.
-    buildCommand: >-
-      npm ci --no-audit --no-fund &&
-      npm run db:generate &&
-      npx playwright install --with-deps chromium &&
-      npm run build
+    dockerfilePath: ./Dockerfile
     # db:push applies schema changes; it refuses destructive changes instead of
     # silently dropping data. It uses DATABASE_URL_UNPOOLED via prisma.config.ts.
-    startCommand: >-
-      npx prisma db push --skip-generate &&
-      node .output/server/index.mjs
+    dockerCommand: npx prisma db push --skip-generate && node .output/server/index.mjs
     healthCheckPath: /api/platforms
     envVars:
-      - key: NODE_VERSION
-        value: 22.18.0
       # Pooled connection for the app, direct connection for Prisma CLI.
       - key: DATABASE_URL
         sync: false
