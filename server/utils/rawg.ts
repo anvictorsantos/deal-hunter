@@ -1,8 +1,13 @@
-// ponytail: naive RAWG sync — paginates once, filters gamesCount>200. Upgrade to incremental sync when catalog grows.
+// ponytail: naive RAWG sync — full platform pages but only 20 games per top platform. Upgrade to incremental sync when catalog grows.
 export async function syncPlatformsAndGames(rawgKey: string, prisma: any) {
-  const platRes = await fetch(`https://api.rawg.io/api/platforms?key=${rawgKey}`)
-  const { results } = await platRes.json()
-  const filtered = results.filter((p: any) => p.games_count > 200)
+  const platforms: any[] = []
+  for (let page = 1; ; page++) {
+    const res = await fetch(`https://api.rawg.io/api/platforms?key=${rawgKey}&page_size=40&page=${page}`)
+    const json: any = await res.json()
+    platforms.push(...(json.results ?? []))
+    if (!json.next) break
+  }
+  const filtered = platforms.filter((p: any) => p.games_count > 0)
   for (const p of filtered) {
     await prisma.platform.upsert({
       where: { id: p.id },
