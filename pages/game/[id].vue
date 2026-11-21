@@ -54,6 +54,12 @@
             <div class="mt-0.5 text-sm text-mute">
               {{ l.location }}
               <span class="ml-2 inline-block rounded-full bg-surface-card px-2.5 py-0.5 text-xs font-medium text-mute">{{ l.condition || '—' }}</span>
+              <span
+                v-if="l.seller"
+                :title="sellerTooltip(l.seller)"
+                class="ml-1 inline-block rounded-full px-2.5 py-0.5 text-xs font-medium"
+                :class="l.seller.trustScore >= 70 ? 'bg-surface-card text-commerce' : 'bg-surface-card text-mute'"
+              >{{ trustLabel(l.seller.trustScore) }}</span>
             </div>
           </div>
           <div class="text-right">
@@ -110,6 +116,14 @@ function toggleNearby() {
 }
 
 const { isWishlisted, toggle: toggleStore } = useWishlist()
+
+const trustLabel = (score: number) => score >= 70 ? 'Trusted seller' : score >= 40 ? 'Check seller' : 'New seller'
+const sellerTooltip = (seller: any) => [
+  seller.name,
+  seller.adsCount != null ? `${seller.adsCount} ads` : 'ad count unknown',
+  seller.rating != null ? `${seller.rating}/5` : 'no rating',
+  seller.memberSince ? `member since ${new Date(seller.memberSince).getFullYear()}` : 'member date unknown',
+].join(' · ')
 const inWishlist = computed(() => isWishlisted(id))
 function toggle() { toggleStore(id) }
 </script>

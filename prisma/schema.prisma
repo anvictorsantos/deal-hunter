@@ -53,6 +53,8 @@ model Listing {
   location      String?
   gameId        String?
   game          Game?    @relation(fields: [gameId], references: [id])
+  sellerId      String?
+  seller        Seller?  @relation(fields: [sellerId], references: [id])
   snapshots     PriceSnapshot[]
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
@@ -60,6 +62,20 @@ model Listing {
   @@unique([marketplace, externalId])
   @@index([gameId])
   @@index([price])
+}
+
+model Seller {
+  id          String    @id // OLX user id
+  name        String
+  profileUrl  String
+  memberSince DateTime?
+  lastSeen    DateTime?
+  isBusiness  Boolean   @default(false)
+  adsCount    Int?
+  rating      Float?
+  trustScore  Int       @default(0)
+  listings    Listing[]
+  updatedAt   DateTime  @updatedAt
 }
 
 model PriceSnapshot {

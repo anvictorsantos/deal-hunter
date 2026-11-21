@@ -1,3 +1,11 @@
+export type SellerInfo = {
+  id: string
+  name: string
+  profileUrl: string
+  memberSince: string | null
+  lastSeen: string | null
+}
+
 export type MarketplaceListing = {
   externalId: string
   title: string
@@ -8,6 +16,7 @@ export type MarketplaceListing = {
   imageUrl: string | null
   location: string | null
   description?: string | null
+  seller?: SellerInfo | null
 }
 
 export type SearchOptions = { limit?: number; regionId?: number }
