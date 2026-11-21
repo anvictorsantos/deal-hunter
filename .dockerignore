@@ -1,0 +1,15 @@
+node_modules
+.nuxt
+.output
+.git
+.github
+.env
+.env.*
+!.env.example
+.neon
+*.db
+*.db-journal
+docs
+designs
+tests
+test-results
