@@ -1,8 +1,11 @@
 <template>
   <div v-if="game">
     <section class="grid grid-cols-1 items-center gap-6 py-12 md:grid-cols-[280px,1fr] md:gap-12 md:py-20">
-      <div v-if="game.coverImage" class="aspect-[3/4] w-full max-w-[280px] overflow-hidden rounded-lg bg-surface-card shadow-[0_16px_40px_rgba(0,0,0,0.18)]">
-        <img :src="game.coverImage" :alt="game.name" class="h-full w-full object-cover" @error="hideBrokenImage" />
+      <div class="relative aspect-[3/4] w-full max-w-[280px] overflow-hidden rounded-lg bg-surface-card shadow-[0_16px_40px_rgba(0,0,0,0.18)]">
+        <div class="absolute inset-0 flex items-center justify-center p-4 text-center font-display text-lg text-mute">
+          {{ game.name }}
+        </div>
+        <img v-if="game.coverImage" :src="game.coverImage" :alt="game.name" class="relative h-full w-full object-cover" @error="hideBrokenImage" />
       </div>
       <div>
         <h1 class="font-display text-4xl font-light leading-tight tracking-tight md:text-5xl">{{ game.name }}</h1>
