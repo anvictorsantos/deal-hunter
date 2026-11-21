@@ -40,7 +40,7 @@ RAWG_API_KEY=xxx node scripts/sync-catalog.mjs
 | Region | Frankfurt |
 | Branch | `main` |
 | Root Directory | *(blank)* |
-| Start Command | `npx prisma db push --skip-generate && node .output/server/index.mjs` |
+| Start Command | `npx prisma db push && node .output/server/index.mjs` |
 | Instance Type | Starter or higher |
 | Health Check Path | `/api/platforms` |
 | Auto-Deploy | Yes |
