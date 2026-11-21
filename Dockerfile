@@ -11,4 +11,5 @@ RUN npm ci && npm run db:generate && npm run build
 
 ENV NODE_ENV=production
 EXPOSE 3000
-CMD ["node", ".output/server/index.mjs"]
+# Shell form so && works; Render's Docker Command field does not run a shell.
+CMD npx prisma db push && node .output/server/index.mjs
