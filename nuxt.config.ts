@@ -4,6 +4,7 @@ export default defineNuxtConfig({
     rawgApiKey: process.env.RAWG_API_KEY,
     olxClientId: process.env.OLX_CLIENT_ID,
     olxClientSecret: process.env.OLX_CLIENT_SECRET,
+    cronSecret: process.env.CRON_SECRET,
     public: {
       supabaseUrl: process.env.SUPABASE_URL,
     }
