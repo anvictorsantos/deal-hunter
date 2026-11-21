@@ -25,8 +25,8 @@ model Platform {
 
 model Game {
   id             String   @id @default(cuid())
-  rawgId         Int      @unique // RAWG game id
-  rawgSlug       String   @unique
+  rawgId         Int      // RAWG game id (same across platforms)
+  rawgSlug       String
   name           String
   coverImage     String?
   platformId     Int
@@ -34,6 +34,8 @@ model Game {
   listings       Listing[]
   wishlistEntries WishlistEntry[]
 
+  @@unique([rawgId, platformId])
+  @@unique([rawgSlug, platformId])
   @@index([platformId])
   @@index([name])
 }
