@@ -52,6 +52,6 @@ Nuxt full-stack (Nuxt 4, SSR off by default settings, Tailwind). No separate bac
 
 ## Conventions
 
-- Tailwind design tokens are defined in `tailwind.config.js` (`primary`, `commerce`, `ink`, `body`, `mute`, `ash`, `hairline`, `surface-card`, `font-display`, `font-body`). Use them instead of raw hex values.
-- `nuxt.config.ts` disables `tailwindcss/nesting` deliberately (measured ESM import failure); do not re-enable it.
+- Tailwind design tokens are defined as `@theme` variables in `assets/css/tailwind.css` (`--color-primary`, `--color-commerce`, `--color-ink`, `--color-body`, `--color-mute`, `--color-ash`, `--color-hairline`, `--color-surface-card`, `--font-display`, `--font-body`). Use them instead of raw hex values.
+- Tailwind 4 is wired through `@tailwindcss/vite` in `nuxt.config.ts`; there is no `tailwind.config.js`.
 - The codebase uses `// ponytail:` comments for deliberate shortcuts and upgrade triggers. Keep that style when deferring a known limit.

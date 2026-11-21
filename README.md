@@ -47,7 +47,7 @@ RAWG_API_KEY=xxx node scripts/sync-catalog.mjs
 
 No disk — the database is Neon Postgres.
 
-Docker is required: Render's native Node runtime is non-root, so Playwright's `--with-deps` cannot install Chromium's system libraries. `mcr.microsoft.com/playwright:v1.65.1-jammy` already has them, and Chromium stays sandboxed because the image runs as `pwuser`.
+Docker is required: Render's native Node runtime is non-root, so Playwright's `--with-deps` cannot install Chromium's system libraries. `mcr.microsoft.com/playwright:v1.65.1-noble` (Node 26) already has them, and Chromium stays sandboxed because the image runs as `pwuser`.
 
 **Environment variables**:
 | Key | Value |

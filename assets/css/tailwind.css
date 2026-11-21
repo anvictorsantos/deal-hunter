@@ -1,6 +1,19 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #0070d1;
+  --color-primary-pressed: #0064b7;
+  --color-link: #0064b7;
+  --color-commerce: #d53b00;
+  --color-ink: #000000;
+  --color-body: rgba(0, 0, 0, 0.6);
+  --color-mute: #6b6b6b;
+  --color-ash: #cccccc;
+  --color-hairline: #f3f3f3;
+  --color-surface-card: #f5f7fa;
+  --font-display: Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-body: Inter, "Helvetica Neue", Arial, sans-serif;
+}
 
 body {
   @apply bg-white font-body text-ink antialiased;
