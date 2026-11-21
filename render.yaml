@@ -1,0 +1,46 @@
+# Render blueprint — one Node web service with a persistent disk for SQLite.
+#
+# SQLite lives on the disk, so this needs a paid instance (Starter or above);
+# Render disks are not available on the free plan. The disk survives deploys.
+# Deploy: Render → New → Blueprint → this repo. Spec: render.com/docs/blueprint-spec
+services:
+  - type: web
+    name: deal-hunter
+    runtime: node
+    plan: starter
+    region: frankfurt
+    branch: main
+    autoDeployTrigger: commit
+    # --with-deps installs Chromium's OS libraries for the OLX scraper.
+    # db:generate must run before the Nuxt build: server code imports @prisma/client.
+    buildCommand: >-
+      npm ci --no-audit --no-fund &&
+      npm run db:generate &&
+      npx playwright install --with-deps chromium &&
+      npm run build
+    # db:push keeps a fresh disk in sync; it refuses destructive changes
+    # instead of silently dropping data.
+    startCommand: >-
+      npx prisma db push --skip-generate &&
+      node .output/server/index.mjs
+    healthCheckPath: /api/platforms
+    disk:
+      name: deal-hunter-data
+      mountPath: /var/data
+      sizeGB: 1
+    envVars:
+      - key: NODE_VERSION
+        value: 22.18.0
+      # Absolute path so it resolves past the prisma/ dir logic in prisma.config.ts.
+      - key: DATABASE_URL
+        value: file:/var/data/deal-hunter.db
+      - key: RAWG_API_KEY
+        sync: false
+      # Also set this value as the GitHub repo secret CRON_SECRET.
+      - key: CRON_SECRET
+        generateValue: true
+      # OLX partner credentials power the "Near me" filter (ADR 0006).
+      - key: OLX_CLIENT_ID
+        sync: false
+      - key: OLX_CLIENT_SECRET
+        sync: false
