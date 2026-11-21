@@ -17,7 +17,7 @@ services:
     dockerfilePath: ./Dockerfile
     # db:push applies schema changes; it refuses destructive changes instead of
     # silently dropping data. It uses DATABASE_URL_UNPOOLED via prisma.config.ts.
-    dockerCommand: npx prisma db push --skip-generate && node .output/server/index.mjs
+    dockerCommand: npx prisma db push && node .output/server/index.mjs
     healthCheckPath: /api/platforms
     envVars:
       # Pooled connection for the app, direct connection for Prisma CLI.
