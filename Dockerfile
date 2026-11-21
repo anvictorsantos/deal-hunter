@@ -1,6 +1,8 @@
 FROM mcr.microsoft.com/playwright:v1.65.1-jammy
 
 WORKDIR /app
+# WORKDIR creates /app as root; --chown only covers copied files.
+RUN chown pwuser:pwuser /app
 COPY --chown=pwuser:pwuser . .
 
 # Non-root keeps Chromium's sandbox available; root would need --no-sandbox.
