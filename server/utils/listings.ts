@@ -102,3 +102,22 @@ export async function refreshListingsForGame(game: Game, opts: { regionId?: numb
   console.log(`[live scrape] matched=${matched.length} -> listings now`)
   return matched.length
 }
+
+// Scheduled refresh: wishlisted games first, then the coldest cached games.
+export async function refreshStaleGames(limit = 10) {
+  const wishlisted = await prisma.wishlistEntry.findMany({ distinct: ['gameId'], select: { gameId: true }, take: limit })
+  const groups = await prisma.listing.groupBy({ by: ['gameId'], where: { gameId: { not: null } }, _max: { updatedAt: true } })
+  const extra = groups
+    .filter(g => !wishlisted.some(w => w.gameId === g.gameId))
+    .sort((a, b) => (a._max.updatedAt?.getTime() ?? 0) - (b._max.updatedAt?.getTime() ?? 0))
+    .slice(0, Math.max(0, limit - wishlisted.length))
+    .map(g => g.gameId!)
+  const ids = [...wishlisted.map(w => w.gameId), ...extra]
+  if (!ids.length) return 0
+
+  const games = await prisma.game.findMany({ where: { id: { in: ids } }, include: { platform: true } })
+  for (const game of games) {
+    await refreshListingsForGame(game).catch(e => console.error(`[cron] ${game.name}:`, e.message))
+  }
+  return games.length
+}

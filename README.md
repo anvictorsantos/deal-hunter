@@ -28,9 +28,16 @@ npm run dev            # http://localhost:3000
 RAWG_API_KEY=xxx node scripts/sync-catalog.mjs
 ```
 
-## Cron (hourly, wishlisted only)
+## Cron (hourly)
+`.github/workflows/refresh-listings.yml` calls `POST /api/cron/refresh` every hour. The endpoint refreshes wishlisted games first, then the 10 coldest cached games (one batch per call).
+
+Required GitHub repository secrets:
+- `APP_URL` — deployed origin, no trailing slash (e.g. `https://deal-hunter.onrender.com`)
+- `CRON_SECRET` — same value as the server's `CRON_SECRET`
+
+Run it manually:
 ```bash
-node scripts/refresh-wishlisted.mjs  # wire to cron / GitHub Actions / Supabase cron
+CRON_SECRET=xxx node scripts/refresh-wishlisted.mjs   # CRON_BATCH=20 to change the batch
 ```
 
 ## Routes
