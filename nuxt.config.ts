@@ -1,5 +1,10 @@
+import tailwindcss from '@tailwindcss/vite'
+
 export default defineNuxtConfig({
-  modules: ['@nuxtjs/tailwindcss'], // supabase removed — wishlist is localStorage for now
+  css: ['~/assets/css/tailwind.css'],
+  vite: {
+    plugins: [tailwindcss()],
+  },
   runtimeConfig: {
     rawgApiKey: process.env.RAWG_API_KEY,
     olxClientId: process.env.OLX_CLIENT_ID,
@@ -8,12 +13,6 @@ export default defineNuxtConfig({
     public: {
       supabaseUrl: process.env.SUPABASE_URL,
     }
-  },
-  postcss: {
-    plugins: {
-      // module re-adds this key; false disables it — ESM import of the dir-shaped subpath fails (ERR_UNSUPPORTED_DIR_IMPORT) and project CSS uses no nesting
-      'tailwindcss/nesting': false,
-    },
   },
   app: {
     head: {

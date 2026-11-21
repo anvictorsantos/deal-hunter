@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/playwright:v1.65.1-jammy
+FROM mcr.microsoft.com/playwright:v1.65.1-noble
 
 WORKDIR /app
 # WORKDIR creates /app as root; --chown only covers copied files.
