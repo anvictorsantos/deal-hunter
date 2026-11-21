@@ -25,10 +25,10 @@ export async function syncPlatformsAndGames(rawgKey: string, prisma: any) {
     const { results: games } = await gRes.json()
     for (const g of games) {
       await prisma.game.upsert({
-        where: { rawgId: g.id },
+        where: { rawgId_platformId: { rawgId: g.id, platformId: p.id } },
         create: { rawgId: g.id, rawgSlug: g.slug, name: g.name, coverImage: g.background_image, platformId: p.id },
-        update: { name: g.name, coverImage: g.background_image }
-      }).catch(() => {}) // duplicate slug across platforms creates distinct Game rows — handled by rawgId uniqueness per platform variant; S1 split
+        update: { name: g.name, ...(g.background_image ? { coverImage: g.background_image } : {}) }
+      })
     }
   }
 }
