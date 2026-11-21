@@ -19,6 +19,7 @@ export default defineEventHandler(async (event) => {
 
   const cached = () => prisma.listing.findMany({
     where: { gameId: id },
+    include: { seller: true },
     orderBy: [{ price: 'asc' }, { createdAt: 'desc' }],
     take: 50
   })
@@ -31,7 +32,7 @@ export default defineEventHandler(async (event) => {
     if (!game) throw createError({ statusCode: 404, statusMessage: 'Game not found' })
     try {
       await refreshListingsForGame(game, { regionId: nearby?.regionId })
-      listings = applyNear(await prisma.listing.findMany({ where: { gameId: id }, orderBy: [{ price: 'asc' }], take: 50 }))
+      listings = applyNear(await prisma.listing.findMany({ where: { gameId: id }, include: { seller: true }, orderBy: [{ price: 'asc' }], take: 50 }))
     } catch (e: any) {
       console.error('[live scrape] ', e.message)
     }

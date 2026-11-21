@@ -1,21 +1,67 @@
 import { chromium } from 'playwright'
-import type { MarketplaceListing, MarketplaceSource } from './marketplace'
+import type { MarketplaceListing, MarketplaceSource, SellerInfo } from './marketplace'
 
-async function fetchDescription(url: string): Promise<string | null> {
+function parseSeller(html: string): SellerInfo | null {
+  const block = html.match(/\\?"user\\?":\{[^}]*\}/s)?.[0]
+  const slug = html.match(/\/ads\/user\/([A-Za-z0-9]+)\//)?.[1]
+  if (!block || !slug) return null
+  try {
+    const user = JSON.parse(`{${block.replace(/\\"/g, '"')}}`).user
+    if (!user.id) return null
+    return {
+      id: String(user.id),
+      name: user.name || 'Unknown',
+      profileUrl: `https://www.olx.pt/ads/user/${slug}/`,
+      memberSince: user.created ?? null,
+      lastSeen: user.lastSeen ?? null,
+    }
+  } catch { return null }
+}
+
+async function fetchDetail(url: string): Promise<{ description: string | null; seller: SellerInfo | null }> {
   try {
     const res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0', 'Accept-Language': 'pt-PT' } })
-    if (!res.ok) return null
+    if (!res.ok) return { description: null, seller: null }
     const html = await res.text()
+    let description: string | null = null
     // olx puts description in ld+json "description":"..." — fast to extract
     const m = html.match(/"description":"((?:\\"|[^"])+)"/)
     if (m) {
-      try { return JSON.parse(`"${m[1]}"`) } catch { return m[1] }
+      try { description = JSON.parse(`"${m[1]}"`) } catch { description = m[1] }
+    } else {
+      const m2 = html.match(/<meta[^>]*name="description"[^>]*content="([^"]+)"/i)
+      if (m2) description = m2[1]
     }
-    // fallback: meta description
-    const m2 = html.match(/<meta[^>]*name="description"[^>]*content="([^"]+)"/i)
-    if (m2) return m2[1]
-    return null
-  } catch { return null }
+    return { description, seller: parseSeller(html) }
+  } catch { return { description: null, seller: null } }
+}
+
+// Profile data (ad count, rating) is client-rendered, so this is the one place that needs a browser per seller.
+export async function fetchSellerProfiles(sellers: SellerInfo[]): Promise<Map<string, { adsCount: number | null; rating: number | null }>> {
+  const out = new Map<string, { adsCount: number | null; rating: number | null }>()
+  if (!sellers.length) return out
+  const browser = await chromium.launch({ headless: true })
+  try {
+    for (const seller of sellers.slice(0, 10)) {
+      const page = await browser.newPage({ userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36', locale: 'pt-PT' })
+      try {
+        await page.goto(seller.profileUrl, { waitUntil: 'domcontentloaded', timeout: 20000 })
+        await page.waitForTimeout(2500)
+        const text = await page.locator('body').innerText()
+        const ads = text.match(/Encontr[áa]mos\s+(\d+)\s+an[úu]ncios/i)
+        const score = /Sem classifica/i.test(text) ? null : text.match(/\b([0-5][.,]\d)\b/)
+        out.set(seller.id, {
+          adsCount: ads ? Number(ads[1]) : null,
+          rating: score ? Number(score[1].replace(',', '.')) : null,
+        })
+      } catch {} finally {
+        await page.close()
+      }
+    }
+  } finally {
+    await browser.close()
+  }
+  return out
 }
 
 // ponytail: single browser for search, fetch() for detail pages (no extra browsers) — add pool/parallel limit if >20 details
@@ -66,13 +112,13 @@ async function searchOlx(query: string, maxItems = 20, regionId?: number): Promi
       } as MarketplaceListing
     })
 
-    // fetch descriptions for bundle-aware matching — only if title doesn't already hint, but cheap to fetch all 20 via fetch()
-    const withDesc = await Promise.all(base.map(async (b) => {
-      const desc = await fetchDescription(b.url)
-      return { ...b, description: desc }
+    // fetch descriptions and seller card for matching and trust — detail pages are plain HTML
+    const withDetail = await Promise.all(base.map(async (b) => {
+      const detail = await fetchDetail(b.url)
+      return { ...b, description: detail.description, seller: detail.seller }
     }))
 
-    return withDesc
+    return withDetail
   } finally {
     await browser.close()
   }
