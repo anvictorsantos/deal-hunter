@@ -9,14 +9,14 @@
   Search the RAWG catalog, watch the games you care about, compare the cheapest OLX.pt listings first.
 </p>
 
-Nuxt 3 + Tailwind + Supabase (Postgres + Auth) + Prisma + REST. RAWG catalog + OLX.pt scraping via Playwright (Portugal). eBay deferred, alerts deferred. See ADR 0005 (partner API cannot search; scraping stays discovery).
+Nuxt 4 + Tailwind + Neon Postgres + Prisma + REST. RAWG catalog + OLX.pt scraping via Playwright (Portugal). eBay deferred, alerts deferred. See ADR 0005 (partner API cannot search; scraping stays discovery).
 
 ## Glossary
 See `CONTEXT.md`. Core: `Brand → Platform → Game (title×platform) → Listing → PriceSnapshot`, `User → Wishlist → WishlistEntry`. Decisions in `docs/adr/`.
 
 ## Setup
 ```bash
-cp .env.example .env   # fill DATABASE_URL, SUPABASE_*, RAWG_API_KEY, OLX_CLIENT_ID, OLX_CLIENT_SECRET
+cp .env.example .env   # fill DATABASE_URL, DATABASE_URL_UNPOOLED (Neon), RAWG_API_KEY, OLX_CLIENT_ID, OLX_CLIENT_SECRET
 npm install
 npx playwright install chromium  # first time only — for OLX scraping
 npx prisma db push     # or migrate dev
@@ -41,23 +41,24 @@ RAWG_API_KEY=xxx node scripts/sync-catalog.mjs
 | Root Directory | *(blank)* |
 | Build Command | `npm ci && npm run db:generate && npx playwright install --with-deps chromium && npm run build` |
 | Start Command | `npx prisma db push --skip-generate && node .output/server/index.mjs` |
-| Instance Type | Starter or higher |
+| Instance Type | Free or higher |
 | Health Check Path | `/api/platforms` |
 | Auto-Deploy | Yes |
 
-**Advanced → Add Disk**: name `deal-hunter-data`, mount path `/var/data`, size 1 GB. Disks are unavailable on the free plan.
+No disk — the database is Neon Postgres.
 
 **Environment variables**:
 | Key | Value |
 |---|---|
 | `NODE_VERSION` | `22.18.0` |
-| `DATABASE_URL` | `file:/var/data/deal-hunter.db` |
+| `DATABASE_URL` | Neon **pooled** connection string |
+| `DATABASE_URL_UNPOOLED` | Neon **direct** connection string (Prisma CLI) |
 | `RAWG_API_KEY` | your key |
 | `CRON_SECRET` | long random string, same as the GitHub secret |
 | `OLX_CLIENT_ID` | OLX partner client id |
 | `OLX_CLIENT_SECRET` | OLX partner client secret |
 
-After the first deploy, open the service **Shell** and seed the catalog:
+Seed the catalog once (locally against the same Neon database, or from the service **Shell**):
 ```bash
 node scripts/sync-catalog.mjs
 ```
@@ -68,7 +69,7 @@ Then set the GitHub repo secrets:
 
 Finally trigger the `refresh listings` workflow once to verify.
 
-The disk survives deploys and restarts; deleting the service deletes the database.
+The database lives in Neon, independent of the Render service.
 
 ## Cron (hourly)
 `.github/workflows/refresh-listings.yml` calls `POST /api/cron/refresh` every hour. The endpoint refreshes wishlisted games first, then the 10 coldest cached games (one batch per call).

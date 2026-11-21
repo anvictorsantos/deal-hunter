@@ -41,7 +41,7 @@ async function syncRawgSearch(key: string, q: string, platformId?: number) {
 export default defineEventHandler(async (event) => {
   const { q, platform } = getQuery(event) as { q?: string; platform?: string }
   const where: any = {}
-  if (q) where.name = { contains: q } // ponytail: SQLite has no mode; LIKE is case-insensitive for ASCII
+  if (q) where.name = { contains: q, mode: 'insensitive' }
   if (platform) where.platform = { slug: platform }
 
   if (q) {
