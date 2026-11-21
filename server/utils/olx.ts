@@ -19,11 +19,14 @@ async function fetchDescription(url: string): Promise<string | null> {
 }
 
 // ponytail: single browser for search, fetch() for detail pages (no extra browsers) — add pool/parallel limit if >20 details
+// Category path (videojogos 4923) keeps unrelated "space"/"dead" hits out; ?search[category_id] alone returns zero cards.
+const SEARCH_BASE = 'https://www.olx.pt/tecnologia-e-informatica/videojogos-consolas/videojogos'
+
 async function searchOlx(query: string, maxItems = 20, regionId?: number): Promise<MarketplaceListing[]> {
   const browser = await chromium.launch({ headless: true })
   try {
     const page = await browser.newPage({ userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36' })
-    const url = `https://www.olx.pt/d/q-${encodeURIComponent(query)}/${regionId ? `?search%5Bregion_id%5D=${regionId}` : ''}`
+    const url = `${SEARCH_BASE}/q-${encodeURIComponent(query)}/${regionId ? `?search%5Bregion_id%5D=${regionId}` : ''}`
     await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 20000 })
     await page.waitForTimeout(1800)
     try { await page.locator('[data-testid="cookie-policy"] button').click({ timeout: 1500 }) } catch {}
